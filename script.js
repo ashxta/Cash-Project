@@ -65,4 +65,3 @@ document.getElementById('expense-form').addEventListener('submit', async functio
         alert('Failed to calculate transactions. Please try again.');
     }
 });
-
