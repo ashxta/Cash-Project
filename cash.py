@@ -49,17 +49,21 @@ def settle_transactions(balances, people):
 
 @app.route('/calculate', methods=['POST'])
 def calculate():
-    data = request.json
-    people = [Person(person['name'], person['amount']) for person in data['people']]
-    
-    # Calculate balances
-    balances = calculate_balances(people)
+    try:
+        data = request.json
+        people = [Person(person['name'], person['amount']) for person in data['people']]
+        
+        # Calculate balances
+        balances = calculate_balances(people)
 
-    # Settle transactions
-    transactions = settle_transactions(balances, people)
+        # Settle transactions
+        transactions = settle_transactions(balances, people)
 
-    result = [{"payer": t.payer, "payee": t.payee, "amount": t.amount} for t in transactions]
-    return jsonify({"transactions": result})
+        result = [{"payer": t.payer, "payee": t.payee, "amount": t.amount} for t in transactions]
+        return jsonify({"transactions": result}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Run on all network interfaces, making the server accessible on LAN
+    app.run(host='0.0.0.0', port=5000, debug=True)
