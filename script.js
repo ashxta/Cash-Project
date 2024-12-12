@@ -19,49 +19,45 @@ function addPerson() {
     people.push({ name: '', amount: 0 });
 }
 
-document.getElementById('expense-form').addEventListener('submit', async function(event) {
-    event.preventDefault();
+// Updated script.js for handling the API request to deployed backend
+document.getElementById("expense-form").addEventListener("submit", function (e) {
+    e.preventDefault();
 
     const people = [];
-    const nameInputs = document.querySelectorAll('.input-field[type="text"]');
-    const amountInputs = document.querySelectorAll('.input-field[type="number"]');
+    const nameFields = document.querySelectorAll("input[id^='name-']");
+    const amountFields = document.querySelectorAll("input[id^='amount-']");
 
-    // Collect data
-    nameInputs.forEach((nameInput, index) => {
-        people.push({
-            name: nameInput.value.trim(),
-            amount: Number(amountInputs[index].value),
-        });
-    });
-
-    try {
-        // Send data to the backend
-        const response = await fetch('http://127.0.0.1:5000/calculate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ people }),
-        });
-
-        // Parse the response
-        const data = await response.json();
-        const transactionsContainer = document.getElementById('transactions-container');
-        transactionsContainer.innerHTML = ''; // Clear previous transactions
-
-        if (data.transactions.length === 0) {
-            transactionsContainer.innerHTML = '<p>No transactions needed.</p>';
-        } else {
-            data.transactions.forEach(transaction => {
-                const transactionDiv = document.createElement('div');
-                transactionDiv.className = 'transaction-item';
-                transactionDiv.innerHTML = `
-                    <img src="transaction-icon.gif" alt="Icon">
-                    <p>${transaction.payer} pays ${transaction.payee}: ${transaction.amount}</p>
-                `;
-                transactionsContainer.appendChild(transactionDiv);
-            });
+    for (let i = 0; i < nameFields.length; i++) {
+        const name = nameFields[i].value.trim();
+        const amount = parseFloat(amountFields[i].value.trim());
+        if (name && !isNaN(amount)) {
+            people.push({ name, amount });
         }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Failed to calculate transactions. Please try again.');
     }
+
+    fetch("https://<your-backend-domain>/calculate", { // Update <your-backend-domain>
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ people }),
+    })
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error("Failed to calculate transactions");
+            }
+            return response.json();
+        })
+        .then((data) => {
+            const transactionsContainer = document.getElementById("transactions-container");
+            transactionsContainer.innerHTML = ""; // Clear previous results
+
+            data.transactions.forEach((transaction) => {
+                const transactionItem = document.createElement("div");
+                transactionItem.className = "transaction-item";
+                transactionItem.innerHTML = `<p>${transaction}</p>`;
+                transactionsContainer.appendChild(transactionItem);
+            });
+        })
+        .catch((error) => {
+            alert(error.message);
+        });
 });
