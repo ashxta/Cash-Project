@@ -19,75 +19,32 @@ function addPerson() {
     people.push({ name: '', amount: 0 });
 }
 
-document.getElementById('expense-form').addEventListener('submit', function (e) {
-    e.preventDefault();  // Prevent form from refreshing page
+document.getElementById('expense-form').addEventListener('submit', function(event) {
+    event.preventDefault(); // Prevents page reload and form reset
 
-    const people = [];
-    // Collect form data
-    document.querySelectorAll('.input-fields').forEach(inputFields => {
-        const name = inputFields.querySelector('.input-item input[name^="name"]').value;
-        const amountSpent = inputFields.querySelector('.input-item input[name^="amount"]').value;
-        if (name && amountSpent) {
-            people.push({ name, amountSpent: parseFloat(amountSpent) });
-        }
-    });
+    // Get the values from the inputs
+    const name = document.getElementById('name-0').value;
+    const amount = document.getElementById('amount-0').value;
 
-    // Debugging: Log the collected form data
-    console.log('Collected Form Data:', people);  // Ensure data is collected
+    // Ensure that both fields are filled out
+    if (name && amount) {
+        // Create a new transaction element
+        const transactionContainer = document.getElementById('transactions-container');
+        const transactionItem = document.createElement('div');
+        transactionItem.classList.add('transaction-item');
 
-    // Validate before sending
-    if (people.length === 0) {
-        alert("Please add some data before submitting.");
-        return;
-    }
+        transactionItem.innerHTML = `
+            <img src="transaction-icon.gif" alt="Transaction icon">
+            <p><strong>Name:</strong> ${name} <strong>Amount Spent:</strong> ${amount}</p>
+        `;
 
-    // Send the data to the backend (if you have one)
-    fetch('https://ashita-cash-project.vercel.app/calculate', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            people: people,
-        }),
-    })
-    .then(response => {
-        // Check if response is valid
-        if (!response.ok) {
-            throw new Error("Failed to connect to the server.");
-        }
-        return response.json();  // Parse response as JSON
-    })
-    .then(data => {
-        // Debugging: Log backend response
-        console.log('Backend Response:', data);  // Log backend response
-        if (data.error) {
-            alert('Failed to calculate transactions: ' + data.error);
-        } else {
-            updateTransactions(data.transactions);  // Update transactions if valid data received
-        }
-    })
-    .catch(error => {
-        alert('Failed to fetch data: ' + error.message);
-        console.error(error);  // Log the error to console
-    });
-});
+        // Add the new transaction to the container
+        transactionContainer.appendChild(transactionItem);
 
-function updateTransactions(transactions) {
-    const transactionsContainer = document.getElementById('transactions-container');
-    transactionsContainer.innerHTML = '';  // Clear previous transactions
-
-    if (transactions && transactions.length > 0) {
-        transactions.forEach(transaction => {
-            const transactionItem = document.createElement('div');
-            transactionItem.classList.add('transaction-item');
-            transactionItem.innerHTML = `
-                <img src="transaction-icon.gif" alt="Transaction icon" width="40" height="40">
-                <p>${transaction.name}: ${transaction.amount}</p>
-            `;
-            transactionsContainer.appendChild(transactionItem);
-        });
+        // Optionally, clear the form inputs
+        document.getElementById('name-0').value = '';
+        document.getElementById('amount-0').value = '';
     } else {
-        transactionsContainer.innerHTML = "<p>No transactions found.</p>";
+        alert('Please fill in both fields.');
     }
-}
+});
