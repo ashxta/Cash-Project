@@ -1,59 +1,50 @@
-let people = []; // Keep track of the people dynamically added
+let people = [{ name: '', amount: 0 }];
+let transactions = [];
 
-// Function to add a new person input field
 function addPerson() {
-    const peopleContainer = document.getElementById('people-container');
-    const index = people.length;
-
-    const personDiv = document.createElement('div');
-    personDiv.classList.add('person');
-    personDiv.innerHTML = `
-        <input type="text" id="name-${index}" placeholder="Name" required>
-        <input type="number" id="amount-${index}" placeholder="Amount Spent" required>
-        <button type="button" onclick="removePerson(${index})" class="remove-button">Remove</button>
+    const container = document.getElementById('people-container');
+    const personEntry = document.createElement('div');
+    personEntry.classList.add('input-fields');
+    personEntry.innerHTML = `
+        <div class="input-item">
+            <label for="name-${people.length}" class="input-label">Name:</label>
+            <input type="text" id="name-${people.length}" class="input-field" required>
+        </div>
+        <div class="input-item">
+            <label for="amount-${people.length}" class="input-label">Amount Spent:</label>
+            <input type="number" id="amount-${people.length}" class="input-field" required>
+        </div>
     `;
-
-    peopleContainer.appendChild(personDiv);
-
-    // Add a new person to the array
+    container.appendChild(personEntry);
     people.push({ name: '', amount: 0 });
 }
 
-// Function to remove a person input field
-function removePerson(index) {
-    const personDiv = document.getElementById(`name-${index}`).parentNode;
-    personDiv.remove();
-    people.splice(index, 1);
-}
-
-// Add event listener for "Add Another Person" button
-document.getElementById('add-person').addEventListener('click', addPerson);
-
-// Form submission logic remains the same
 document.getElementById('expense-form').addEventListener('submit', async function(event) {
     event.preventDefault();
 
-    // Collect updated people data
-    const formData = people.map((_, index) => {
+    // Collect people data
+    const formData = [];
+    people.forEach((person, index) => {
         const name = document.getElementById(`name-${index}`).value;
         const amount = parseInt(document.getElementById(`amount-${index}`).value, 10);
-        return { name, amount };
+        formData.push({ name, amount });
     });
 
     // Send POST request to backend
     try {
-        const response = await fetch(`${backendURL}/calculate`, {
+        const response = await fetch('http://127.0.0.1:5000/calculate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ people: formData })
         });
 
+        // Check if the response is successful
         if (!response.ok) {
-            throw new Error('Failed to fetch data from the server');
+            throw new Error('Network response was not ok');
         }
 
         const result = await response.json();
-        console.log(result); // Debugging line to check response
+        console.log(result);  // Debugging line to check response
         transactions = result.transactions;
 
         // Display transactions
