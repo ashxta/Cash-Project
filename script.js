@@ -1,23 +1,5 @@
-let people = [{ name: '', amount: 0 }];
-let transactions = [];
-
-function addPerson() {
-    const container = document.getElementById('people-container');
-    const personEntry = document.createElement('div');
-    personEntry.classList.add('input-fields');
-    personEntry.innerHTML = `
-        <div class="input-item">
-            <label for="name-${people.length}" class="input-label">Name:</label>
-            <input type="text" id="name-${people.length}" class="input-field" required>
-        </div>
-        <div class="input-item">
-            <label for="amount-${people.length}" class="input-label">Amount Spent:</label>
-            <input type="number" id="amount-${people.length}" class="input-field" required>
-        </div>
-    `;
-    container.appendChild(personEntry);
-    people.push({ name: '', amount: 0 });
-}
+// Automatically determine the backend URL
+const backendURL = `${window.location.protocol}//${window.location.hostname}:5000`;
 
 document.getElementById('expense-form').addEventListener('submit', async function(event) {
     event.preventDefault();
@@ -32,15 +14,14 @@ document.getElementById('expense-form').addEventListener('submit', async functio
 
     // Send POST request to backend
     try {
-        const response = await fetch('http://127.0.0.1:5000/calculate', {
+        const response = await fetch(`${backendURL}/calculate`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ people: formData })
         });
 
-        // Check if the response is successful
         if (!response.ok) {
-            throw new Error('Network response was not ok');
+            throw new Error('Failed to fetch data from the server');
         }
 
         const result = await response.json();
