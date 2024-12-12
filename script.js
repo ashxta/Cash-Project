@@ -19,45 +19,59 @@ function addPerson() {
     people.push({ name: '', amount: 0 });
 }
 
-// Updated script.js for handling the API request to deployed backend
-document.getElementById("expense-form").addEventListener("submit", function (e) {
+// Replace this with your deployed backend URL if needed
+const backendURL = 'https://ashita-cash-project.vercel.app/calculate'; // Vercel URL
+
+// Add event listener to submit form
+document.getElementById('expense-form').addEventListener('submit', async function (e) {
     e.preventDefault();
 
     const people = [];
-    const nameFields = document.querySelectorAll("input[id^='name-']");
-    const amountFields = document.querySelectorAll("input[id^='amount-']");
+    // Assuming the people form section is populated dynamically
+    document.querySelectorAll('.input-fields').forEach(inputFields => {
+        const name = inputFields.querySelector('.input-item input[name^="name"]').value;
+        const amountSpent = inputFields.querySelector('.input-item input[name^="amount"]').value;
+        people.push({ name, amountSpent: parseFloat(amountSpent) });
+    });
 
-    for (let i = 0; i < nameFields.length; i++) {
-        const name = nameFields[i].value.trim();
-        const amount = parseFloat(amountFields[i].value.trim());
-        if (name && !isNaN(amount)) {
-            people.push({ name, amount });
-        }
-    }
-
-    fetch("https://<your-backend-domain>/calculate", { // Update <your-backend-domain>
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ people }),
-    })
-        .then((response) => {
-            if (!response.ok) {
-                throw new Error("Failed to calculate transactions");
-            }
-            return response.json();
-        })
-        .then((data) => {
-            const transactionsContainer = document.getElementById("transactions-container");
-            transactionsContainer.innerHTML = ""; // Clear previous results
-
-            data.transactions.forEach((transaction) => {
-                const transactionItem = document.createElement("div");
-                transactionItem.className = "transaction-item";
-                transactionItem.innerHTML = `<p>${transaction}</p>`;
-                transactionsContainer.appendChild(transactionItem);
-            });
-        })
-        .catch((error) => {
-            alert(error.message);
+    try {
+        // Send POST request to backend
+        const response = await fetch(backendURL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json', // Make sure to specify JSON content
+            },
+            body: JSON.stringify({ people }), // Send the people data to the backend
         });
+
+        const result = await response.json(); // Assuming the backend responds with JSON
+
+        if (result.error) {
+            alert('Failed to calculate transactions: ' + result.error);
+        } else {
+            // Update the transactions display with the response data
+            updateTransactions(result.transactions);
+        }
+    } catch (error) {
+        alert('Failed to calculate transactions');
+    }
 });
+
+// Function to update the displayed transactions
+function updateTransactions(transactions) {
+    const transactionsContainer = document.getElementById('transactions-container');
+    transactionsContainer.innerHTML = ''; // Clear previous transactions
+
+    transactions.forEach(transaction => {
+        const transactionItem = document.createElement('div');
+        transactionItem.classList.add('transaction-item');
+
+        // Transaction details
+        transactionItem.innerHTML = `
+            <img src="transaction-icon.gif" alt="Transaction icon">
+            <p>${transaction.name}: ${transaction.amount}</p>
+        `;
+
+        transactionsContainer.appendChild(transactionItem);
+    });
+}
