@@ -1,33 +1,40 @@
 from flask import Flask, request, jsonify
-import subprocess
-import json
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)  # Enables CORS for all origins
 
-@app.route('/calculate', methods=['POST'])
-def calculate():
+@app.route("/calculate", methods=["POST"])
+def calculate_transactions():
     data = request.json
-    people = data['people']
+    people = data.get("people", [])
     
-    # Save people data to a temporary file or pass it to the C program
-    input_data = '\n'.join([f"{person['name']} {person['amount']}" for person in people])
-    with open("people_data.txt", "w") as f:
-        f.write(input_data)
-    
-    # Call the C program using subprocess (assuming it's compiled and available)
-    result = subprocess.run(["./Cash Flow Minimizer - Graphs and Heaps"], capture_output=True, text=True)
-    
-    # Assuming the C program returns the transaction data
+    # Calculate total amount and average
+    total_amount = sum(p["amount"] for p in people)
+    average_amount = total_amount / len(people)
+
+    # Calculate transactions
+    balances = {p["name"]: p["amount"] - average_amount for p in people}
     transactions = []
-    for line in result.stdout.splitlines():
-        payer, payee, amount = line.split(":")
-        transactions.append({
-            'payer': payer.strip(),
-            'payee': payee.strip(),
-            'amount': int(amount.strip())
-        })
 
-    return jsonify({"transactions": transactions})
+    creditors = [p for p in balances.items() if p[1] > 0]
+    debtors = [p for p in balances.items() if p[1] < 0]
 
-if __name__ == '__main__':
+    for debtor in debtors:
+        debtor_name, debtor_balance = debtor
+        while debtor_balance < 0 and creditors:
+            creditor_name, creditor_balance = creditors.pop(0)
+
+            transfer_amount = min(-debtor_balance, creditor_balance)
+            debtor_balance += transfer_amount
+            creditor_balance -= transfer_amount
+
+            transactions.append(f"{debtor_name} pays {creditor_name} ₹{transfer_amount:.2f}")
+
+            if creditor_balance > 0:
+                creditors.insert(0, (creditor_name, creditor_balance))
+
+    return jsonify({"transactions": transactions}), 200
+
+if __name__ == "__main__":
     app.run(debug=True)
