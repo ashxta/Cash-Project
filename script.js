@@ -19,32 +19,50 @@ function addPerson() {
     people.push({ name: '', amount: 0 });
 }
 
-document.getElementById('expense-form').addEventListener('submit', function(event) {
-    event.preventDefault(); // Prevents page reload and form reset
+document.getElementById('expense-form').addEventListener('submit', async function(event) {
+    event.preventDefault();
 
-    // Get the values from the inputs
-    const name = document.getElementById('name-0').value;
-    const amount = document.getElementById('amount-0').value;
+    const people = [];
+    const nameInputs = document.querySelectorAll('.input-field[type="text"]');
+    const amountInputs = document.querySelectorAll('.input-field[type="number"]');
 
-    // Ensure that both fields are filled out
-    if (name && amount) {
-        // Create a new transaction element
-        const transactionContainer = document.getElementById('transactions-container');
-        const transactionItem = document.createElement('div');
-        transactionItem.classList.add('transaction-item');
+    // Collect data
+    nameInputs.forEach((nameInput, index) => {
+        people.push({
+            name: nameInput.value.trim(),
+            amount: Number(amountInputs[index].value),
+        });
+    });
 
-        transactionItem.innerHTML = `
-            <img src="transaction-icon.gif" alt="Transaction icon">
-            <p><strong>Name:</strong> ${name} <strong>Amount Spent:</strong> ${amount}</p>
-        `;
+    try {
+        // Send data to the backend
+        const response = await fetch('http://127.0.0.1:5000/calculate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ people }),
+        });
 
-        // Add the new transaction to the container
-        transactionContainer.appendChild(transactionItem);
+        // Parse the response
+        const data = await response.json();
+        const transactionsContainer = document.getElementById('transactions-container');
+        transactionsContainer.innerHTML = ''; // Clear previous transactions
 
-        // Optionally, clear the form inputs
-        document.getElementById('name-0').value = '';
-        document.getElementById('amount-0').value = '';
-    } else {
-        alert('Please fill in both fields.');
+        if (data.transactions.length === 0) {
+            transactionsContainer.innerHTML = '<p>No transactions needed.</p>';
+        } else {
+            data.transactions.forEach(transaction => {
+                const transactionDiv = document.createElement('div');
+                transactionDiv.className = 'transaction-item';
+                transactionDiv.innerHTML = `
+                    <img src="transaction-icon.gif" alt="Icon">
+                    <p>${transaction.payer} pays ${transaction.payee}: ${transaction.amount}</p>
+                `;
+                transactionsContainer.appendChild(transactionDiv);
+            });
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to calculate transactions. Please try again.');
     }
 });
+
