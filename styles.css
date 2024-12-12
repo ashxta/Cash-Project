@@ -134,3 +134,21 @@ body {
     font-size: 1rem;
     color: #4a5568;
 }
+/* Responsive Design for Small Screens */
+@media only screen and (max-width: 600px) {
+    .main-container {
+        padding: 1rem;
+    }
+
+    .form-container {
+        flex-direction: column;
+    }
+
+    .transaction-item p {
+        font-size: 0.9rem;
+    }
+
+    .submit-btn, .add-btn {
+        font-size: 0.9rem;
+    }
+}
