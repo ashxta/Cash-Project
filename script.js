@@ -19,11 +19,8 @@ function addPerson() {
     people.push({ name: '', amount: 0 });
 }
 
-// Replace this with your deployed backend URL if needed
-const backendURL = 'https://ashita-cash-project.vercel.app/calculate'; // Vercel URL
-
 document.getElementById('expense-form').addEventListener('submit', function (e) {
-    e.preventDefault();
+    e.preventDefault();  // Prevent form from refreshing page
 
     const people = [];
     // Collect form data
@@ -35,8 +32,8 @@ document.getElementById('expense-form').addEventListener('submit', function (e) 
         }
     });
 
-    // Debugging log for collected form data
-    console.log('Form Data:', people);  // Log the collected data to the console
+    // Debugging: Log the collected form data
+    console.log('Collected Form Data:', people);  // Ensure data is collected
 
     // Validate before sending
     if (people.length === 0) {
@@ -55,14 +52,15 @@ document.getElementById('expense-form').addEventListener('submit', function (e) 
         }),
     })
     .then(response => {
+        // Check if response is valid
         if (!response.ok) {
-            throw new Error("Network response was not ok");
+            throw new Error("Failed to connect to the server.");
         }
-        return response.json();
+        return response.json();  // Parse response as JSON
     })
     .then(data => {
-        // Debugging log for backend response
-        console.log('Backend Response:', data);  // Log the response to check if it’s valid
+        // Debugging: Log backend response
+        console.log('Backend Response:', data);  // Log backend response
         if (data.error) {
             alert('Failed to calculate transactions: ' + data.error);
         } else {
@@ -71,19 +69,20 @@ document.getElementById('expense-form').addEventListener('submit', function (e) 
     })
     .catch(error => {
         alert('Failed to fetch data: ' + error.message);
+        console.error(error);  // Log the error to console
     });
 });
 
 function updateTransactions(transactions) {
     const transactionsContainer = document.getElementById('transactions-container');
-    transactionsContainer.innerHTML = '';
+    transactionsContainer.innerHTML = '';  // Clear previous transactions
 
     if (transactions && transactions.length > 0) {
         transactions.forEach(transaction => {
             const transactionItem = document.createElement('div');
             transactionItem.classList.add('transaction-item');
             transactionItem.innerHTML = `
-                <img src="transaction-icon.gif" alt="Transaction icon">
+                <img src="transaction-icon.gif" alt="Transaction icon" width="40" height="40">
                 <p>${transaction.name}: ${transaction.amount}</p>
             `;
             transactionsContainer.appendChild(transactionItem);
