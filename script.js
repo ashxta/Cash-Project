@@ -1,15 +1,43 @@
-// Automatically determine the backend URL
-const backendURL = `${window.location.protocol}//${window.location.hostname}:5000`;
+let people = []; // Keep track of the people dynamically added
 
+// Function to add a new person input field
+function addPerson() {
+    const peopleContainer = document.getElementById('people-container');
+    const index = people.length;
+
+    const personDiv = document.createElement('div');
+    personDiv.classList.add('person');
+    personDiv.innerHTML = `
+        <input type="text" id="name-${index}" placeholder="Name" required>
+        <input type="number" id="amount-${index}" placeholder="Amount Spent" required>
+        <button type="button" onclick="removePerson(${index})" class="remove-button">Remove</button>
+    `;
+
+    peopleContainer.appendChild(personDiv);
+
+    // Add a new person to the array
+    people.push({ name: '', amount: 0 });
+}
+
+// Function to remove a person input field
+function removePerson(index) {
+    const personDiv = document.getElementById(`name-${index}`).parentNode;
+    personDiv.remove();
+    people.splice(index, 1);
+}
+
+// Add event listener for "Add Another Person" button
+document.getElementById('add-person').addEventListener('click', addPerson);
+
+// Form submission logic remains the same
 document.getElementById('expense-form').addEventListener('submit', async function(event) {
     event.preventDefault();
 
-    // Collect people data
-    const formData = [];
-    people.forEach((person, index) => {
+    // Collect updated people data
+    const formData = people.map((_, index) => {
         const name = document.getElementById(`name-${index}`).value;
         const amount = parseInt(document.getElementById(`amount-${index}`).value, 10);
-        formData.push({ name, amount });
+        return { name, amount };
     });
 
     // Send POST request to backend
@@ -25,7 +53,7 @@ document.getElementById('expense-form').addEventListener('submit', async functio
         }
 
         const result = await response.json();
-        console.log(result);  // Debugging line to check response
+        console.log(result); // Debugging line to check response
         transactions = result.transactions;
 
         // Display transactions
